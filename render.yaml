@@ -1,0 +1,49 @@
+services:
+  # FastAPI Web Service
+  - type: web
+    name: alfaleus-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile.web
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: alfaleus-db
+          property: connectionString
+      - key: REDIS_URL
+        sync: false # Requires external free Redis (e.g., Upstash)
+      - key: OLLAMA_URL
+        value: "http://alfaleus-ollama:11434"
+
+  # Celery Background Worker
+  - type: worker
+    name: alfaleus-worker
+    env: docker
+    dockerfilePath: ./backend/Dockerfile.worker
+    plan: starter # Render requires paid Starter plan for Background Workers
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: alfaleus-db
+          property: connectionString
+      - key: REDIS_URL
+        sync: false
+      - key: OLLAMA_URL
+        value: "http://alfaleus-ollama:11434"
+
+  # Ollama AI Server
+  - type: web
+    name: alfaleus-ollama
+    env: docker
+    dockerfilePath: ./ollama/Dockerfile
+    plan: starter # Requires >512MB RAM for TinyLlama model
+    envVars:
+      - key: PORT
+        value: "11434"
+
+databases:
+  # PostgreSQL Database
+  - name: alfaleus-db
+    databaseName: alfaleus
+    user: alfaleus
+    plan: free
