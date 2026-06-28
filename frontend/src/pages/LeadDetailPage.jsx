@@ -320,9 +320,11 @@ export default function LeadDetailPage() {
                         </span>
                         <CopyButton text={`Subject: ${draft.subject}\n\n${draft.body}\n\n${draft.call_to_action}`} />
                       </div>
-                      <div className="draft-subject">{draft.subject}</div>
-                      <div className="draft-body">{draft.body}</div>
-                      <div className="draft-cta">{draft.call_to_action}</div>
+                      <div className="draft-content-wrap">
+                        <div className="draft-subject">{draft.subject}</div>
+                        <div className="draft-body">{draft.body}</div>
+                        <div className="draft-cta">{draft.call_to_action}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
