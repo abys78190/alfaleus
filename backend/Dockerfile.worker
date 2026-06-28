@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     libffi-dev \
     libssl-dev \
+    redis-server \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -14,13 +15,16 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Playwright browsers
+# Install Playwright browsers (essential for scraping fallback)
 RUN playwright install --with-deps chromium
 
 COPY . .
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
+ENV PORT=8000
 
-# Start the Celery worker
-CMD ["celery", "-A", "app.pipeline.orchestrator.celery_app", "worker", "--loglevel=info", "--concurrency=2"]
+EXPOSE $PORT
+
+# Run Redis in the background, then start the FastAPI server
+CMD ["celery", "-A", "celery_app", "worker", "--loglevel=info", "--concurrency=1"]

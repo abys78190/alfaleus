@@ -75,7 +75,7 @@ services:
   worker:
     build:
       context: ./backend
-      dockerfile: Dockerfile.new
+      dockerfile: Dockerfile.worker
     container_name: alfaleus_worker
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://alfaleus:alfaleus_dev@postgres:5432/alfaleus_db}
