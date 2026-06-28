@@ -50,7 +50,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.web
+      dockerfile: Dockerfile
     container_name: alfaleus_backend
     ports:
       - "8000:8000"
@@ -76,7 +76,7 @@ services:
   worker:
     build:
       context: ./backend
-      dockerfile: Dockerfile.worker
+      dockerfile: Dockerfile
     container_name: alfaleus_worker
     environment:
       - DATABASE_URL=postgresql+asyncpg://alfaleus:alfaleus_dev@postgres:5432/alfaleus_db
