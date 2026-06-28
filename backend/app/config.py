@@ -1,10 +1,20 @@
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from typing import List
 import json
 
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://alfaleus:alfaleus_dev@localhost:5432/alfaleus_db"
+    
+    @field_validator("DATABASE_URL", mode="before")
+    def fix_database_url(cls, v: str) -> str:
+        if v and v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if v and v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        return v
+
     REDIS_URL: str = "redis://localhost:6379/0"
     OLLAMA_URL: str = "http://localhost:11434"
 
