@@ -30,5 +30,5 @@ async def retry_enrichment(lead_id: UUID, db: AsyncSession = Depends(get_db)):
     await db.commit()
 
     from app.pipeline.orchestrator import enrich_lead_task
-    enrich_lead_task.delay(str(lead_id))
+    enrich_lead_task.apply_async(args=[str(lead_id)], ignore_result=True)
     return {"queued": True, "lead_id": str(lead_id)}

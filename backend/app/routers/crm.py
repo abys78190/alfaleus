@@ -18,7 +18,7 @@ async def sync_lead(lead_id: UUID, db: AsyncSession = Depends(get_db)):
         raise HTTPException(400, "Lead must be enriched before syncing to CRM.")
 
     from app.pipeline.orchestrator import sync_to_crm_task
-    sync_to_crm_task.delay(str(lead_id))
+    sync_to_crm_task.apply_async(args=[str(lead_id)], ignore_result=True)
     return {"queued": True, "lead_id": str(lead_id)}
 
 
@@ -30,7 +30,7 @@ async def sync_all(db: AsyncSession = Depends(get_db)):
 
     from app.pipeline.orchestrator import sync_to_crm_task
     for lid in enriched:
-        sync_to_crm_task.delay(str(lid))
+        sync_to_crm_task.apply_async(args=[str(lid)], ignore_result=True)
 
     return {"queued": len(enriched)}
 

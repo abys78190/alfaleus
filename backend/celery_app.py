@@ -1,10 +1,10 @@
 from celery import Celery
 from app.config import settings
 
+# No result backend needed — tasks use ignore_result=True for fire-and-forget
 celery_app = Celery(
     "alfaleus",
     broker=settings.REDIS_URL,
-    backend=settings.REDIS_URL,
     include=["app.pipeline.orchestrator"],
 )
 

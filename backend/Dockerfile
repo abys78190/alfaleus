@@ -27,4 +27,4 @@ ENV PORT=8000
 EXPOSE $PORT
 
 # Run Redis in the background, then start the FastAPI server
-CMD ["sh", "-c", "redis-server --bind 0.0.0.0 --protected-mode no & gunicorn app.main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT"]
+CMD ["sh", "-c", "redis-server --bind 0.0.0.0 --protected-mode no --daemonize yes && sleep 1 && gunicorn app.main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT"]

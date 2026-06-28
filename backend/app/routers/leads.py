@@ -100,10 +100,10 @@ async def upload_csv(file: UploadFile = File(...), db: AsyncSession = Depends(ge
 
     await db.commit()
 
-    # Enqueue enrichment for all leads
+    # Enqueue enrichment for all leads (fire-and-forget, do not wait for result)
     from app.pipeline.orchestrator import enrich_lead_task
     for lid in lead_ids:
-        enrich_lead_task.delay(lid)
+        enrich_lead_task.apply_async(args=[lid], ignore_result=True)
 
     return {"queued": created, "skipped": skipped, "lead_ids": lead_ids}
 
@@ -269,7 +269,7 @@ async def create_extension_lead(payload: dict, db: AsyncSession = Depends(get_db
     await db.refresh(lead)
 
     from app.pipeline.orchestrator import enrich_lead_task
-    enrich_lead_task.delay(str(lead.id))
+    enrich_lead_task.apply_async(args=[str(lead.id)], ignore_result=True)
 
     return {"id": str(lead.id), "status": lead.status}
 
@@ -303,7 +303,7 @@ async def domain_enrichment(payload: dict, db: AsyncSession = Depends(get_db)):
 
     from app.pipeline.orchestrator import enrich_lead_task
     for lid in created_ids:
-        enrich_lead_task.delay(lid)
+        enrich_lead_task.apply_async(args=[lid], ignore_result=True)
 
     return {"discovered": len(created_ids), "lead_ids": created_ids, "domain": domain}
 
