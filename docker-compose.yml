@@ -92,7 +92,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
-    command: celery -A celery_app worker --loglevel=info --concurrency=4
+    command: celery -A celery_app worker --loglevel=info --concurrency=1
     restart: unless-stopped
 
   # ─── React Frontend ────────────────────────────────────────────────
