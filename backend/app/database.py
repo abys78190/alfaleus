@@ -5,7 +5,9 @@ from typing import AsyncGenerator
 
 
 db_url = settings.DATABASE_URL
-if db_url and db_url.startswith("postgresql://"):
+if not db_url:
+    db_url = "postgresql+asyncpg://alfaleus:alfaleus_dev@postgres:5432/alfaleus_db"
+elif db_url.startswith("postgresql://"):
     db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 elif db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
