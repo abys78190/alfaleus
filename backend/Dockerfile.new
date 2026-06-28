@@ -20,6 +20,9 @@ RUN playwright install --with-deps chromium
 
 COPY . .
 
+# Make startup script executable
+RUN chmod +x start.sh
+
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8000
@@ -27,4 +30,4 @@ ENV PORT=8000
 EXPOSE $PORT
 
 # Run Redis in the background, then start the FastAPI server
-CMD ["sh", "-c", "redis-server --bind 0.0.0.0 --protected-mode no & gunicorn app.main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT"]
+CMD ["/bin/sh", "start.sh"]
