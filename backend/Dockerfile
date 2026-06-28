@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     libffi-dev \
     libssl-dev \
+    redis-server \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -25,5 +26,5 @@ ENV PORT=8000
 
 EXPOSE $PORT
 
-# Run the FastAPI server via Gunicorn with Uvicorn workers
-CMD ["sh", "-c", "gunicorn app.main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT"]
+# Run Redis in the background, then start the FastAPI server
+CMD ["sh", "-c", "redis-server --daemonize yes --bind 0.0.0.0 --protected-mode no && gunicorn app.main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT"]
