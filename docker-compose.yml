@@ -55,8 +55,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://alfaleus:alfaleus_dev@postgres:5432/alfaleus_db
-      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://alfaleus:alfaleus_dev@postgres:5432/alfaleus_db}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
       - OLLAMA_URL=http://ollama:11434
       - SECRET_KEY=dev_secret_key_change_in_production
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
@@ -78,8 +78,8 @@ services:
       dockerfile: Dockerfile
     container_name: alfaleus_worker
     environment:
-      - DATABASE_URL=postgresql+asyncpg://alfaleus:alfaleus_dev@postgres:5432/alfaleus_db
-      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://alfaleus:alfaleus_dev@postgres:5432/alfaleus_db}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
       - OLLAMA_URL=http://ollama:11434
       - SECRET_KEY=dev_secret_key_change_in_production
       - NOTION_API_KEY=${NOTION_API_KEY:-}
