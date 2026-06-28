@@ -1,12 +1,12 @@
 FROM python:3.11-slim-bullseye
 
-# Install system dependencies for Playwright
+# Install system dependencies for Playwright + redis-cli for health check
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
     libffi-dev \
     libssl-dev \
-    redis-server \
+    redis-tools \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -21,13 +21,10 @@ RUN playwright install --with-deps chromium
 COPY . .
 
 # Make startup script executable
-RUN chmod +x start.sh
+RUN chmod +x start_worker.sh
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV PORT=8000
 
-EXPOSE $PORT
-
-# Run Redis in the background, then start the FastAPI server
-CMD ["/bin/sh", "start.sh"]
+# Start the Celery worker via startup script (waits for Redis first)
+CMD ["/bin/sh", "start_worker.sh"]
