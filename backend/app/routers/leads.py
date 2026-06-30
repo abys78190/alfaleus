@@ -249,10 +249,9 @@ async def lead_sse(lead_id: UUID):
 async def create_extension_lead(payload: dict, db: AsyncSession = Depends(get_db)):
     """Accept lead from Chrome extension."""
     domain = None
-    if payload.get("url"):
-        domain = _extract_domain(payload["url"])
-    if not domain and payload.get("linkedin_url"):
-        pass
+    url = payload.get("url", "")
+    if url and "linkedin.com" not in url.lower():
+        domain = _extract_domain(url)
 
     lead = Lead(
         name=payload.get("name"),
