@@ -165,6 +165,53 @@ async def scrape_linkedin_company(company_slug: str) -> dict:
     return result
 
 
+async def search_linkedin_profile_via_google(profile_slug: str) -> dict:
+    """Fallback: Search Google for the LinkedIn profile page if directly blocked."""
+    from app.config import settings
+    if not settings.GOOGLE_API_KEY or not settings.GOOGLE_CSE_ID:
+        return {}
+        
+    query = f"site:linkedin.com/in/{profile_slug}"
+    url = "https://www.googleapis.com/customsearch/v1"
+    params = {
+        "key": settings.GOOGLE_API_KEY,
+        "cx": settings.GOOGLE_CSE_ID,
+        "q": query,
+        "num": 3
+    }
+    
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(url, params=params)
+            if resp.status_code == 200:
+                data = resp.json()
+                items = data.get("items", [])
+                if not items:
+                    return {}
+                    
+                snippet = items[0].get("snippet", "")
+                title = items[0].get("title", "")
+                result_data = {"raw_text": snippet}
+                
+                # Title typically looks like "John Doe - Software Engineer - Google | LinkedIn"
+                name_part = title.split("-")[0].split("|")[0].strip()
+                if name_part and "LinkedIn" not in name_part:
+                    result_data["name"] = name_part[:100]
+
+                result_data["headline"] = snippet[:200]
+                
+                at_match = re.search(r" is (?:a |an |the )?(.+?) at (.+?)[\.|,]", snippet, re.IGNORECASE)
+                if at_match:
+                    result_data["title"] = at_match.group(1).strip()[:100]
+                    result_data["company"] = at_match.group(2).strip()[:100]
+                    
+                return result_data
+    except Exception as e:
+        logger.debug(f"Google fallback search failed for profile {profile_slug}: {e}")
+        
+    return {}
+
+
 async def scrape_linkedin_profile(profile_slug: str) -> dict:
     """
     Scrape LinkedIn individual profile public page.
@@ -189,8 +236,16 @@ async def scrape_linkedin_profile(profile_slug: str) -> dict:
             resp = await client.get(url)
 
             if _is_blocked(resp):
-                result["blocked"] = True
-                result["error"] = f"LinkedIn blocked with status {resp.status_code}"
+                logger.info(f"LinkedIn blocked profile: {profile_slug} ({resp.status_code}). Triggering Google fallback.")
+                fallback_data = await search_linkedin_profile_via_google(profile_slug)
+                if fallback_data:
+                    logger.info(f"Google fallback successful for profile {profile_slug}")
+                    result["data"] = fallback_data
+                    result["blocked"] = False # Recovered via fallback
+                    result["error"] = None
+                else:
+                    result["blocked"] = True
+                    result["error"] = f"LinkedIn blocked with status {resp.status_code} and Google fallback failed"
                 return result
 
             soup = BeautifulSoup(resp.text, "lxml")
