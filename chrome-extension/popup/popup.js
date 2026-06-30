@@ -178,12 +178,18 @@ function setupEventListeners() {
   }
 
   // Open dashboard
-  const dashboardBtn = $('open-dashboard');
-  if (dashboardBtn) {
-    dashboardBtn.addEventListener('click', () => {
-      chrome.tabs.create({ url: `${apiUrl.replace('api/v1', '').replace(':8000', ':5173') || 'https://frontend-psi-teal-lcd2aq9ol8.vercel.app'}` });
-    });
-  }
+  const openDashboard = () => {
+    chrome.tabs.create({ url: 'https://frontend-psi-teal-lcd2aq9ol8.vercel.app' });
+  };
+  
+  const dashboardBtn = $('open-app');
+  if (dashboardBtn) dashboardBtn.addEventListener('click', openDashboard);
+  
+  const footerDashboardBtn = $('footer-open-app');
+  if (footerDashboardBtn) footerDashboardBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    openDashboard();
+  });
 
   // View in dashboard (after successful enrich)
   const viewBtn = $('view-in-dashboard');
