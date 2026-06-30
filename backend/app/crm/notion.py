@@ -112,9 +112,9 @@ async def sync_lead_to_notion(
     Returns {status, record_id, error}
     """
     if not settings.NOTION_API_KEY:
-        return {"status": "skipped", "record_id": None, "error": "NOTION_API_KEY not configured"}
+        return {"status": "failed", "record_id": None, "error": "NOTION_API_KEY not configured"}
     if not settings.NOTION_DATABASE_ID:
-        return {"status": "skipped", "record_id": None, "error": "NOTION_DATABASE_ID not configured"}
+        return {"status": "failed", "record_id": None, "error": "NOTION_DATABASE_ID not configured"}
 
     domain = lead_data.get("domain") or lead_data.get("email", "").split("@")[-1]
 
