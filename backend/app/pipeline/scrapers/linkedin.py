@@ -211,6 +211,34 @@ async def search_linkedin_profile_via_google(profile_slug: str) -> dict:
         
     return {}
 
+async def find_linkedin_profile_slug(name: str, company: str) -> Optional[str]:
+    """Search Google to find the LinkedIn profile slug for a given name and company."""
+    from app.config import settings
+    if not settings.GOOGLE_API_KEY or not settings.GOOGLE_CSE_ID:
+        return None
+        
+    query = f"{name} {company} site:linkedin.com/in"
+    url = "https://www.googleapis.com/customsearch/v1"
+    params = {
+        "key": settings.GOOGLE_API_KEY,
+        "cx": settings.GOOGLE_CSE_ID,
+        "q": query,
+        "num": 1
+    }
+    
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(url, params=params)
+            if resp.status_code == 200:
+                items = resp.json().get("items", [])
+                if items:
+                    link = items[0].get("link", "")
+                    if "linkedin.com/in/" in link:
+                        return extract_slug_from_url(link, "in")
+    except Exception as e:
+        logger.debug(f"Failed to find profile slug for {name} at {company}: {e}")
+    return None
+
 
 async def scrape_linkedin_profile(profile_slug: str) -> dict:
     """

@@ -126,13 +126,23 @@ def enrich_lead_task(self, lead_id: str):
                 elif "/in/" in lead.linkedin_url:
                     profile_slug = extract_slug_from_url(lead.linkedin_url, "in")
 
-            if not company_slug and lead.company:
+            if not company_slug and not profile_slug and lead.name and lead.company:
+                # Use Google search to find the profile slug based on name and company
+                from app.pipeline.scrapers.linkedin import find_linkedin_profile_slug
+                profile_slug = _run_async(find_linkedin_profile_slug(lead.name, lead.company))
+
+            if not company_slug and lead.company and not profile_slug:
                 company_slug = lead.company.lower().replace(" ", "-").replace(",", "")
 
-            if company_slug:
-                linkedin_data = _run_async(scrape_linkedin_company(company_slug))
-            elif profile_slug:
+            if profile_slug:
                 linkedin_data = _run_async(scrape_linkedin_profile(profile_slug))
+            elif company_slug:
+                linkedin_data = _run_async(scrape_linkedin_company(company_slug))
+
+            # Save the discovered URL back to the lead so it shows in the frontend UI
+            if not lead.linkedin_url and linkedin_data.get("url"):
+                lead.linkedin_url = linkedin_data["url"]
+                db.flush()
 
             if linkedin_data.get("blocked"):
                 enriched_sources["linkedin"] = "blocked"
