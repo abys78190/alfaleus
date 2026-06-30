@@ -5,7 +5,7 @@
 
 'use strict';
 
-const API_BASE_DEFAULT = 'http://localhost:8000';
+const API_BASE_DEFAULT = 'https://alfaleus-backend-production.up.railway.app';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let apiUrl = API_BASE_DEFAULT;
@@ -181,7 +181,7 @@ function setupEventListeners() {
   const dashboardBtn = $('open-dashboard');
   if (dashboardBtn) {
     dashboardBtn.addEventListener('click', () => {
-      chrome.tabs.create({ url: `${apiUrl.replace(':8000', ':5173') || 'http://localhost:5173'}` });
+      chrome.tabs.create({ url: `${apiUrl.replace('api/v1', '').replace(':8000', ':5173') || 'https://frontend-psi-teal-lcd2aq9ol8.vercel.app'}` });
     });
   }
 
@@ -191,7 +191,7 @@ function setupEventListeners() {
     viewBtn.addEventListener('click', () => {
       const leadId = viewBtn.dataset.leadId;
       if (leadId) {
-        chrome.tabs.create({ url: `http://localhost:5173/leads/${leadId}` });
+        chrome.tabs.create({ url: `https://frontend-psi-teal-lcd2aq9ol8.vercel.app/leads/${leadId}` });
       }
     });
   }

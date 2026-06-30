@@ -50,8 +50,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === 'install') {
     // Set default API URL on fresh install
-    chrome.storage.sync.set({ apiUrl: 'http://localhost:8000' });
-    console.log('[Alfaleus] Extension installed. Default API URL set to http://localhost:8000');
+    chrome.storage.sync.set({ apiUrl: 'https://alfaleus-backend-production.up.railway.app' });
+    console.log('[Alfaleus] Extension installed. Default API URL set to https://alfaleus-backend-production.up.railway.app');
   }
   if (reason === 'update') {
     console.log('[Alfaleus] Extension updated to version', chrome.runtime.getManifest().version);
