@@ -93,18 +93,33 @@ async function loadExtractedData() {
         },
       });
       if (results?.[0]?.result) {
-        extractedData = results[0].result;
-        populateForm(extractedData);
-        return;
+        let sessionData = results[0].result;
+        // Check for stale SPA data
+        if (sessionData && sessionData.url && !currentTab.url.includes(sessionData.url.split('?')[0])) {
+          sessionData = null; // discard stale data
+        }
+        if (sessionData) {
+          extractedData = sessionData;
+          populateForm(extractedData);
+          return;
+        }
       }
     } catch (_) {}
   }
 
   // Fallback to background storage
   const { data } = await chrome.runtime.sendMessage({ type: 'GET_EXTRACTED' });
-  if (data) {
-    extractedData = data;
+  let bgData = data;
+  if (bgData && bgData.url && currentTab?.url && !currentTab.url.includes(bgData.url.split('?')[0])) {
+    bgData = null; // discard stale background data
+  }
+  
+  if (bgData) {
+    extractedData = bgData;
     populateForm(extractedData);
+  } else if (currentTab?.url?.includes('linkedin.com')) {
+    // Force a live extraction right now if we have no valid data!
+    extractLive(currentTab);
   }
 }
 
@@ -125,6 +140,36 @@ function populateForm(data) {
 
   if (data.name || data.company) {
     setStatus('✓ Lead data extracted automatically', 'success');
+  }
+}
+
+async function extractLive(tab) {
+  setStatus('Extracting live page data...', 'info');
+  try {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => {
+        // Run a lightweight extraction script instantly in the page context
+        let name = document.querySelector('h1')?.innerText || document.title.split('|')[0].split('-')[0].trim();
+        let title = document.querySelector('.text-body-medium')?.innerText || '';
+        let company = '';
+        if (title.toLowerCase().includes(' at ')) company = title.split(/ at /i).pop().trim();
+        
+        return {
+          name: name,
+          title: title,
+          company: company,
+          linkedin_url: window.location.href.split('?')[0],
+          url: window.location.href.split('?')[0]
+        };
+      }
+    });
+    if (results?.[0]?.result) {
+      extractedData = results[0].result;
+      populateForm(extractedData);
+    }
+  } catch (e) {
+    console.error("Live extraction failed:", e);
   }
 }
 
