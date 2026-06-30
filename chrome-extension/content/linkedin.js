@@ -80,10 +80,12 @@
         break;
       }
     }
-    // Fallback: og:title
+    // Fallback: og:title or document.title
     if (!name) {
-      const ogTitle = getAttr("meta[property='og:title']", 'content');
-      if (ogTitle) name = ogTitle.split('|')[0].trim();
+      const ogTitle = getAttr("meta[property='og:title']", 'content') || document.title;
+      if (ogTitle) {
+        name = ogTitle.split('|')[0].split('-')[0].trim();
+      }
     }
 
     // ── Title / Headline ──────────────────────────────────────────────────────
@@ -103,10 +105,10 @@
         break;
       }
     }
-    // Try og:description as a fallback
+    // Try og:description or document.title as a fallback
     if (!title) {
       const ogDesc = getAttr("meta[property='og:description']", 'content');
-      if (ogDesc) title = ogDesc.split(' at ')[0].trim();
+      if (ogDesc) title = ogDesc.split(' at ')[0].split('...')[0].trim();
     }
 
     // ── Company ───────────────────────────────────────────────────────────────
@@ -115,7 +117,25 @@
     if (title && title.toLowerCase().includes(' at ')) {
       company = title.split(/ at /i).pop().trim();
     }
-    // Strategy 2: current position in experience section
+    // Strategy 2: Right panel current company badge
+    if (!company) {
+      const companySelectors = [
+        'button[aria-label*="Current company"]',
+        'a[aria-label*="Current company"]',
+        '.pv-text-details__right-panel .pv-text-details__right-panel-item',
+        '.pv-top-card--experience-list-item span',
+        '.pv-top-card--experience-list-item a'
+      ];
+      for (const sel of companySelectors) {
+        const el = document.querySelector(sel);
+        const text = getText(el);
+        if (text && text.length > 1) {
+          company = text;
+          break;
+        }
+      }
+    }
+    // Strategy 3: current position in experience section
     if (!company) {
       const expSelectors = [
         '#experience ~ div .t-bold span[aria-hidden="true"]',
@@ -133,11 +153,6 @@
         }
         if (company) break;
       }
-    }
-    // Strategy 3: top-card button for current company
-    if (!company) {
-      const companyLink = document.querySelector('.pv-top-card--experience-list-item a');
-      if (companyLink) company = getText(companyLink);
     }
 
     // ── Location ──────────────────────────────────────────────────────────────
