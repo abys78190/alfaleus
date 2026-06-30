@@ -223,18 +223,25 @@ async function enrichLead() {
   setStatus('Sending to enrichment pipeline...', 'info');
 
   try {
-    const response = await fetch(`${apiUrl}/api/v1/leads/extension`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+    const response = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({
+        type: 'API_PROXY',
+        url: `${apiUrl}/api/v1/leads/extension`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }, (res) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else if (!res || !res.success) {
+          reject(new Error((res && res.error) || 'Failed to fetch'));
+        } else {
+          resolve(res.data);
+        }
+      });
     });
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.detail || `HTTP ${response.status}`);
-    }
-
-    const result = await response.json();
+    const result = response;
 
     // Show success state
     const successEl = $('success-state');

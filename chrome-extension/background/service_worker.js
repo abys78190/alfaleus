@@ -43,6 +43,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   }
+
+  // Handle API proxy to bypass CORS
+  if (message.type === 'API_PROXY') {
+    fetch(message.url, {
+      method: message.method,
+      headers: message.headers,
+      body: message.body
+    })
+    .then(async (response) => {
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      sendResponse({ success: true, data });
+    })
+    .catch((error) => {
+      sendResponse({ success: false, error: error.message });
+    });
+    return true;
+  }
 });
 
 // ─── Extension Install / Update Handler ───────────────────────────────────────
