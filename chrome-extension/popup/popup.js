@@ -37,6 +37,13 @@ async function init() {
   // Load saved API URL
   const stored = await chrome.storage.sync.get(['apiUrl']);
   apiUrl = stored.apiUrl || API_BASE_DEFAULT;
+  
+  // Force update if they have the old localhost cached
+  if (apiUrl.includes('localhost:8000')) {
+    apiUrl = API_BASE_DEFAULT;
+    await chrome.storage.sync.set({ apiUrl });
+  }
+
   const urlInput = $('api-url-input');
   if (urlInput) urlInput.value = apiUrl;
 
